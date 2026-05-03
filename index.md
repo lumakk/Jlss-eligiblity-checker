@@ -4,10 +4,8 @@ title: JLSS Eligibility Checker
 ---
 
 <style>
-  /* ── Layout ── */
-  .checker-wrap { max-width: 760px; margin: 0 auto; padding: 0 0 3rem; }
+  .checker-wrap { max-width: 780px; margin: 0 auto; padding: 0 0 3rem; }
 
-  /* ── Notice box ── */
   .notice {
     background: #fffbea;
     border-left: 4px solid #e6a817;
@@ -19,7 +17,6 @@ title: JLSS Eligibility Checker
   }
   .notice a { color: #1a6bbf; }
 
-  /* ── Section card ── */
   .form-card {
     border: 1px solid #dde3eb;
     border-radius: 6px;
@@ -32,7 +29,6 @@ title: JLSS Eligibility Checker
     padding: 0.65rem 1rem;
     font-weight: 700;
     font-size: 0.95rem;
-    letter-spacing: 0.01em;
     color: #222;
     display: flex;
     align-items: center;
@@ -40,16 +36,15 @@ title: JLSS Eligibility Checker
   }
   .form-card-body { padding: 1rem 1.1rem; }
 
-  /* ── Program toggle ── */
   .program-toggle {
     display: flex;
-    gap: 0;
     border: 2px solid #2879d0;
     border-radius: 6px;
     overflow: hidden;
     width: fit-content;
     margin: 0.4rem 0 0.2rem;
   }
+  .program-toggle input[type="radio"] { display: none; }
   .program-toggle label {
     padding: 0.55rem 1.4rem;
     cursor: pointer;
@@ -60,19 +55,12 @@ title: JLSS Eligibility Checker
     transition: background 0.15s, color 0.15s;
     user-select: none;
   }
-  .program-toggle input[type="radio"] { display: none; }
-  .program-toggle input[type="radio"]:checked + label {
-    background: #2879d0;
-    color: #fff;
-  }
-  .program-toggle label:not(:last-of-type) {
-    border-right: 2px solid #2879d0;
-  }
+  .program-toggle label:not(:last-of-type) { border-right: 2px solid #2879d0; }
+  .program-toggle input[type="radio"]:checked + label { background: #2879d0; color: #fff; }
 
-  /* ── Semester block ── */
-  .semester-block { margin-bottom: 1.1rem; }
+  .semester-block { margin-bottom: 1.2rem; }
   .semester-title {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -82,54 +70,83 @@ title: JLSS Eligibility Checker
     border-bottom: 1px dashed #ccc;
   }
 
-  /* ── Subject row ── */
   .subject-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.3rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    gap: 0.6rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #f2f2f2;
   }
   .subject-row:last-child { border-bottom: none; }
-  .subject-label { font-size: 0.88rem; flex: 1; min-width: 0; line-height: 1.3; }
-  .subject-code { font-size: 0.75rem; color: #777; display: block; }
-  .grade-select {
-    font-size: 0.84rem;
-    padding: 0.28rem 0.5rem;
+  .subject-label { flex: 1; min-width: 0; font-size: 0.88rem; line-height: 1.3; }
+  .subject-code { font-size: 0.74rem; color: #777; display: block; }
+
+  .grade-input {
+    width: 72px;
+    flex-shrink: 0;
+    padding: 0.28rem 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    text-align: center;
+    font-weight: 600;
+    transition: border-color 0.15s;
+  }
+  .grade-input:focus { outline: none; border-color: #2879d0; }
+  .grade-input.ok  { border-color: #5cb85c; color: #2d7a2d; background: #f5fff5; }
+  .grade-input.bad { border-color: #d9534f; color: #b03030; background: #fff5f5; }
+
+  .mark-select {
+    font-size: 0.82rem;
+    padding: 0.28rem 0.4rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #fff;
     color: #333;
-    min-width: 160px;
     flex-shrink: 0;
     cursor: pointer;
   }
-  .grade-select.has-issue { border-color: #d9534f; background: #fff5f5; }
-  .grade-select.is-pass   { border-color: #5cb85c; }
+  .mark-select.has-issue { border-color: #d9534f; background: #fff5f5; color: #b03030; }
 
-  /* ── GWA row ── */
-  .gwa-row {
-    display: flex;
+  .gwa-display {
+    display: none;
     align-items: center;
-    gap: 0.8rem;
+    gap: 1rem;
+    background: #f7f9fc;
+    border: 1px solid #dde3eb;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.4rem;
     flex-wrap: wrap;
   }
-  .gwa-row label { font-weight: 600; font-size: 0.92rem; }
-  .gwa-input {
-    width: 90px;
-    padding: 0.35rem 0.55rem;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
+  .gwa-label { font-weight: 700; font-size: 0.92rem; white-space: nowrap; }
+  .gwa-value {
+    font-size: 1.5rem;
     font-weight: 700;
-    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: #aaa;
+    min-width: 90px;
   }
-  .gwa-input.ok  { border-color: #5cb85c; color: #3a7a3a; }
-  .gwa-input.bad { border-color: #d9534f; color: #c0392b; }
-  .gwa-hint { font-size: 0.8rem; color: #777; }
+  .gwa-value.ok  { color: #27ae60; }
+  .gwa-value.bad { color: #d9534f; }
+  .gwa-bar-wrap { flex: 1; min-width: 160px; }
+  .gwa-bar-bg {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .gwa-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: #aaa;
+    transition: width 0.25s, background 0.25s;
+  }
+  .gwa-bar-fill.ok  { background: #27ae60; }
+  .gwa-bar-fill.bad { background: #d9534f; }
+  .gwa-threshold-note { font-size: 0.78rem; color: #666; margin-top: 0.25rem; }
 
-  /* ── Yes / No radio ── */
   .yn-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.4rem; }
   .yn-opt { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; font-size: 0.92rem; }
   .yn-opt input[type="radio"] { accent-color: #2879d0; width: 16px; height: 16px; cursor: pointer; }
@@ -143,9 +160,8 @@ title: JLSS Eligibility Checker
     display: none;
   }
   .sub-question.visible { display: block; }
-  .sub-question label { font-weight: 600; font-size: 0.9rem; }
+  .sub-question > label { font-weight: 600; font-size: 0.9rem; }
 
-  /* ── Check button ── */
   .check-btn {
     display: block;
     width: 100%;
@@ -163,7 +179,6 @@ title: JLSS Eligibility Checker
   }
   .check-btn:hover { background: #1d5fa8; }
 
-  /* ── Result box ── */
   .result-box {
     margin-top: 1.6rem;
     border-radius: 6px;
@@ -171,7 +186,7 @@ title: JLSS Eligibility Checker
     display: none;
     animation: fadeIn 0.25s ease;
   }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
   .result-box.eligible   { background: #eafaf1; border: 2px solid #27ae60; }
   .result-box.ineligible { background: #fdf2f2; border: 2px solid #d9534f; }
   .result-box.visible    { display: block; }
@@ -182,21 +197,21 @@ title: JLSS Eligibility Checker
   .result-reasons li { margin-bottom: 0.2rem; }
   .result-note { font-size: 0.8rem; color: #666; margin-top: 0.7rem; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 0.7rem; }
 
-  /* ── Validation errors ── */
-  .error-msg { color: #d9534f; font-size: 0.8rem; margin-top: 0.3rem; display: none; }
+  .error-msg { color: #d9534f; font-size: 0.8rem; margin-top: 0.35rem; display: none; }
   .error-msg.visible { display: block; }
 
-  @media (max-width: 540px) {
-    .subject-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-    .grade-select { min-width: 100%; }
-    .gwa-input { width: 80px; }
+  @media (max-width: 560px) {
+    .subject-row { flex-wrap: wrap; }
+    .subject-label { width: 100%; }
+    .grade-input, .mark-select { flex: 1; }
+    .gwa-value { font-size: 1.2rem; }
   }
 </style>
 
 <div class="checker-wrap">
 
   <div class="notice">
-    <strong>ℹ️ Note:</strong> This checker assumes you are a <strong>Regular 2nd Year BSIT or BSCS student</strong> enrolled in a <strong>State University or College (SUC)</strong>. If you study at a <strong>Private Higher Education Institution (HEI)</strong> or a <strong>Local University and College (LUC)</strong>, please verify your eligibility directly at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a>.
+    <strong>ℹ️ Note:</strong> This checker assumes you are a <strong>Regular 2nd Year BSIT or BSCS student</strong> enrolled in a <strong>State University or College (SUC)</strong>. If you study at a <strong>Private HEI</strong> or <strong>Local University and College (LUC)</strong>, verify eligibility directly at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a>.
   </div>
 
   <!-- ① Program -->
@@ -216,29 +231,27 @@ title: JLSS Eligibility Checker
 
   <!-- ② Grades -->
   <div class="form-card">
-    <div class="form-card-header">② Academic Record</div>
+    <div class="form-card-header">② Grades (1st Year to Current Semester)</div>
     <div class="form-card-body">
-
-      <!-- GWA input -->
-      <div class="gwa-row" style="margin-bottom:1rem;">
-        <label for="gwa-input">General Weighted Average (GWA):</label>
-        <input type="number" id="gwa-input" class="gwa-input" min="0" max="100" step="0.01" placeholder="e.g. 88">
-        <span class="gwa-hint">Must be <strong>83% or higher</strong></span>
-      </div>
-      <div class="error-msg" id="err-gwa">Please enter your GWA (0–100).</div>
-
-      <hr style="border:none;border-top:1px solid #eee;margin:0.8rem 0;">
       <p style="margin:0 0 0.8rem;font-size:0.88rem;color:#444;">
-        For each subject below, select whether it was <strong>Passed</strong>, or if it has a <strong>conditional / failing mark</strong>.
-        A failing or conditional mark is: a grade <em>below 3.0</em>, <em>INC</em> (Incomplete), or <em>W</em> (Withdrawn).
+        Enter your percentage grade (0–100) for each subject. Use the dropdown to mark a subject
+        as <strong>INC</strong> or <strong>W</strong> instead of entering a number.
+        A grade below <strong>75%</strong>, or a mark of <em>INC</em> or <em>W</em>, is treated as a failing or conditional mark.
       </p>
-
-      <!-- Subject list — rendered by JS -->
       <div id="subject-list">
         <p style="color:#888;font-size:0.9rem;font-style:italic;">← Select your program above to load subjects.</p>
       </div>
-      <div class="error-msg" id="err-subjects">Please select a grade status for every subject.</div>
+      <div class="error-msg" id="err-subjects">Please fill in a grade for every subject.</div>
+    </div>
+  </div>
 
+  <!-- Live GWA -->
+  <div class="gwa-display" id="gwa-display">
+    <div class="gwa-label">Computed GWA:</div>
+    <div class="gwa-value" id="gwa-value">—</div>
+    <div class="gwa-bar-wrap">
+      <div class="gwa-bar-bg"><div class="gwa-bar-fill" id="gwa-bar"></div></div>
+      <div class="gwa-threshold-note">Minimum required: <strong>83.00%</strong></div>
     </div>
   </div>
 
@@ -279,17 +292,15 @@ title: JLSS Eligibility Checker
 
   <button class="check-btn" onclick="checkEligibility()">Check My Eligibility →</button>
 
-  <!-- Result -->
   <div class="result-box" id="result-box">
     <div class="result-title" id="result-title"></div>
     <ul class="result-reasons" id="result-reasons"></ul>
     <div class="result-note" id="result-note"></div>
   </div>
 
-</div><!-- /.checker-wrap -->
+</div>
 
 <script>
-// ── Subject data ────────────────────────────────────────────────────────────
 const SUBJECTS = {
   CS: [
     {
@@ -301,8 +312,8 @@ const SUBJECTS = {
         { code: 'GEED 005', name: 'Purposive Communication' },
         { code: 'GEED 020', name: 'Politics, Governance and Citizenship' },
         { code: 'GEED 032', name: 'Filipinolohiya' },
-        { code: 'NSTP 1',   name: 'NSTP 1' },
-        { code: 'PATHFIT 1',name: 'PATHFIT 1' },
+        { code: 'NSTP 1',    name: 'NSTP 1' },
+        { code: 'PATHFIT 1', name: 'PATHFIT 1' },
       ]
     },
     {
@@ -314,8 +325,8 @@ const SUBJECTS = {
         { code: 'GEED 007', name: 'Science, Technology and Society' },
         { code: 'GEED 033', name: 'Pagsasalin sa Kontekstong Filipino' },
         { code: 'MATH 017', name: 'Differential Calculus' },
-        { code: 'NSTP 2',   name: 'NSTP 2' },
-        { code: 'PATHFIT 2',name: 'PATHFIT 2' },
+        { code: 'NSTP 2',    name: 'NSTP 2' },
+        { code: 'PATHFIT 2', name: 'PATHFIT 2' },
       ]
     },
     {
@@ -328,7 +339,7 @@ const SUBJECTS = {
         { code: 'COSC 202', name: 'Modeling and Simulation' },
         { code: 'MATH 018', name: 'Linear Algebra' },
         { code: 'GEED 008', name: 'Ethics' },
-        { code: 'PATHFIT 3',name: 'PATHFIT 3' },
+        { code: 'PATHFIT 3', name: 'PATHFIT 3' },
       ]
     }
   ],
@@ -342,8 +353,8 @@ const SUBJECTS = {
         { code: 'GEED 004', name: 'Mathematics in the Modern World' },
         { code: 'GEED 005', name: 'Purposive Communication' },
         { code: 'GEED 032', name: 'Filipinolohiya' },
-        { code: 'PATHFIT 1',name: 'PATHFIT 1' },
-        { code: 'NSTP 1',   name: 'NSTP 1' },
+        { code: 'PATHFIT 1', name: 'PATHFIT 1' },
+        { code: 'NSTP 1',    name: 'NSTP 1' },
       ]
     },
     {
@@ -355,8 +366,8 @@ const SUBJECTS = {
         { code: 'GEED 010', name: "People and the Earth's Ecosystems" },
         { code: 'GEED 020', name: 'Politics and Governance' },
         { code: 'GEED 033', name: 'Pagsasalin sa Kontekstong Filipino' },
-        { code: 'PATHFIT 2',name: 'PATHFIT 2' },
-        { code: 'NSTP 2',   name: 'NSTP 2' },
+        { code: 'PATHFIT 2', name: 'PATHFIT 2' },
+        { code: 'NSTP 2',    name: 'NSTP 2' },
       ]
     },
     {
@@ -369,159 +380,217 @@ const SUBJECTS = {
         { code: 'GEED 001', name: 'Understanding the Self' },
         { code: 'GEED 028', name: 'Reading Visual Arts' },
         { code: 'INTE 201', name: 'Programming 3 (Structured Programming)' },
-        { code: 'PATHFIT 3',name: 'PATHFIT 3' },
+        { code: 'PATHFIT 3', name: 'PATHFIT 3' },
       ]
     }
   ]
 };
 
-// ── Render subjects ──────────────────────────────────────────────────────────
+const PASSING = 75;
+
+// ── Render subject list ───────────────────────────────────────────────────────
 function renderSubjects(program) {
   const container = document.getElementById('subject-list');
-  if (!program) { container.innerHTML = '<p style="color:#888;font-size:0.9rem;font-style:italic;">← Select your program above to load subjects.</p>'; return; }
+  const gwaPanel  = document.getElementById('gwa-display');
+
+  if (!program) {
+    container.innerHTML = '<p style="color:#888;font-size:0.9rem;font-style:italic;">← Select your program above to load subjects.</p>';
+    gwaPanel.style.display = 'none';
+    return;
+  }
 
   let html = '';
   SUBJECTS[program].forEach(sem => {
     html += `<div class="semester-block"><p class="semester-title">${sem.label}</p>`;
-    sem.courses.forEach(course => {
-      const id = 'g-' + course.code.replace(/\s/g, '_');
+    sem.courses.forEach(({ code, name }) => {
+      const id = 'g-' + code.replace(/[\s.]/g, '_');
       html += `
         <div class="subject-row">
           <div class="subject-label">
-            <span class="subject-code">${course.code}</span>
-            ${course.name}
+            <span class="subject-code">${code}</span>${name}
           </div>
-          <select class="grade-select" id="${id}" onchange="styleGradeSelect(this)">
-            <option value="">— Select —</option>
-            <option value="pass">✓ Passed</option>
-            <option value="conditional">⚠ Below 3.0 / Conditional</option>
-            <option value="inc">✗ INC (Incomplete)</option>
-            <option value="w">✗ W (Withdrawn)</option>
+          <input type="number" class="grade-input" id="${id}"
+            min="0" max="100" step="0.01" placeholder="—"
+            oninput="onGradeInput(this)"
+            data-code="${code}" data-name="${name.replace(/"/g, '&quot;')}">
+          <select class="mark-select" id="${id}-mark" onchange="onMarkChange(this,'${id}')">
+            <option value="normal">Normal</option>
+            <option value="inc">INC</option>
+            <option value="w">W</option>
           </select>
         </div>`;
     });
     html += '</div>';
   });
+
   container.innerHTML = html;
+  gwaPanel.style.display = 'flex';
+  updateGWA();
 }
 
-function styleGradeSelect(sel) {
-  sel.classList.remove('has-issue', 'is-pass');
-  if (sel.value === 'pass') sel.classList.add('is-pass');
-  else if (sel.value && sel.value !== '') sel.classList.add('has-issue');
+// ── Grade input / mark handlers ───────────────────────────────────────────────
+function onGradeInput(input) {
+  if (input.value !== '') document.getElementById(input.id + '-mark').value = 'normal';
+  styleGrade(input);
+  updateGWA();
+  hideError('err-subjects');
 }
 
-// ── Program toggle ───────────────────────────────────────────────────────────
-document.querySelectorAll('input[name="program"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    renderSubjects(radio.value);
-    hideError('err-program');
+function onMarkChange(sel, gradeId) {
+  const input = document.getElementById(gradeId);
+  if (sel.value !== 'normal') {
+    input.value = '';
+    input.classList.remove('ok', 'bad');
+    sel.classList.add('has-issue');
+  } else {
+    sel.classList.remove('has-issue');
+    styleGrade(input);
+  }
+  updateGWA();
+}
+
+function styleGrade(input) {
+  input.classList.remove('ok', 'bad');
+  const v = parseFloat(input.value);
+  if (input.value === '' || isNaN(v)) return;
+  input.classList.add(v >= PASSING ? 'ok' : 'bad');
+}
+
+// ── Live GWA ──────────────────────────────────────────────────────────────────
+function updateGWA() {
+  const program = getRadio('program');
+  if (!program) return;
+
+  const rows = collectGrades(program);
+  const numeric = rows.filter(r => r.mark === 'normal' && r.grade !== null);
+
+  if (numeric.length === 0) { paintGWA(null); return; }
+
+  const gwa = numeric.reduce((s, r) => s + r.grade, 0) / numeric.length;
+  paintGWA(gwa);
+}
+
+function paintGWA(gwa) {
+  const valEl = document.getElementById('gwa-value');
+  const barEl = document.getElementById('gwa-bar');
+  if (gwa === null) {
+    valEl.textContent = '—';
+    valEl.className = 'gwa-value';
+    barEl.style.width = '0%';
+    barEl.className = 'gwa-bar-fill';
+    return;
+  }
+  const ok = gwa >= 83;
+  valEl.textContent = gwa.toFixed(2) + '%';
+  valEl.className = 'gwa-value ' + (ok ? 'ok' : 'bad');
+  barEl.style.width = Math.min(gwa, 100) + '%';
+  barEl.className = 'gwa-bar-fill ' + (ok ? 'ok' : 'bad');
+}
+
+// ── Collect grades ────────────────────────────────────────────────────────────
+function collectGrades(program) {
+  const rows = [];
+  SUBJECTS[program].forEach(sem => {
+    sem.courses.forEach(({ code, name }) => {
+      const id    = 'g-' + code.replace(/[\s.]/g, '_');
+      const input = document.getElementById(id);
+      const sel   = document.getElementById(id + '-mark');
+      if (!input) return;
+      rows.push({
+        code, name,
+        grade: input.value !== '' ? parseFloat(input.value) : null,
+        mark:  sel ? sel.value : 'normal'
+      });
+    });
   });
-});
+  return rows;
+}
 
-// ── DOST conditional block ───────────────────────────────────────────────────
-document.querySelectorAll('input[name="dost-applied"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const block = document.getElementById('dost-qualify-block');
-    if (radio.value === 'yes') block.classList.add('visible');
-    else block.classList.remove('visible');
+// ── Wiring ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="program"]').forEach(r =>
+  r.addEventListener('change', () => { renderSubjects(r.value); hideError('err-program'); })
+);
+document.querySelectorAll('input[name="dost-applied"]').forEach(r =>
+  r.addEventListener('change', () => {
+    document.getElementById('dost-qualify-block').classList.toggle('visible', r.value === 'yes');
     hideError('err-dost');
-  });
-});
+  })
+);
+['dost-qualified','citizen'].forEach(name =>
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r =>
+    r.addEventListener('change', () => hideError('err-' + name.replace('-','_').replace('dost_qualified','dost-qualify')))
+  )
+);
+document.querySelectorAll('input[name="dost-qualified"]').forEach(r =>
+  r.addEventListener('change', () => hideError('err-dost-qualify'))
+);
+document.querySelectorAll('input[name="citizen"]').forEach(r =>
+  r.addEventListener('change', () => hideError('err-citizen'))
+);
 
-document.querySelectorAll('input[name="dost-qualified"]').forEach(r => {
-  r.addEventListener('change', () => hideError('err-dost-qualify'));
-});
-document.querySelectorAll('input[name="citizen"]').forEach(r => {
-  r.addEventListener('change', () => hideError('err-citizen'));
-});
-document.getElementById('gwa-input').addEventListener('input', function() {
-  hideError('err-gwa');
-  this.classList.remove('ok','bad');
-  const v = parseFloat(this.value);
-  if (!isNaN(v)) this.classList.add(v >= 83 ? 'ok' : 'bad');
-});
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 function showError(id) { document.getElementById(id).classList.add('visible'); }
-function hideError(id) { document.getElementById(id).classList.remove('visible'); }
+function hideError(id)  { const el = document.getElementById(id); if (el) el.classList.remove('visible'); }
+function getRadio(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; }
 
-function getRadio(name) {
-  const el = document.querySelector(`input[name="${name}"]:checked`);
-  return el ? el.value : null;
-}
-
-// ── Main check ───────────────────────────────────────────────────────────────
+// ── Check eligibility ─────────────────────────────────────────────────────────
 function checkEligibility() {
   let valid = true;
 
-  // Validate program
   const program = getRadio('program');
-  if (!program) { showError('err-program'); valid = false; }
-  else hideError('err-program');
+  if (!program) { showError('err-program'); valid = false; } else hideError('err-program');
 
-  // Validate GWA
-  const gwaRaw = document.getElementById('gwa-input').value.trim();
-  const gwa = parseFloat(gwaRaw);
-  if (!gwaRaw || isNaN(gwa) || gwa < 0 || gwa > 100) { showError('err-gwa'); valid = false; }
-  else hideError('err-gwa');
+  let allFilled = true, failingList = [], gwa = null;
 
-  // Validate subject selects
-  let allSubjectsSelected = true;
-  let failingSubjects = [];
   if (program) {
-    SUBJECTS[program].forEach(sem => {
-      sem.courses.forEach(course => {
-        const id = 'g-' + course.code.replace(/\s/g, '_');
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (!el.value) { allSubjectsSelected = false; }
-        else if (el.value !== 'pass') {
-          const labelMap = { conditional: 'Below 3.0/Conditional', inc: 'INC', w: 'W' };
-          failingSubjects.push(`${course.code} – ${course.name} (${labelMap[el.value] || el.value})`);
-        }
-      });
+    const rows = collectGrades(program);
+    const numericGrades = [];
+
+    rows.forEach(r => {
+      if (r.mark !== 'normal') {
+        failingList.push(`${r.code} – ${r.name} (${r.mark.toUpperCase()})`);
+        return;
+      }
+      if (r.grade === null) { allFilled = false; return; }
+      if (r.grade < PASSING) failingList.push(`${r.code} – ${r.name} (${r.grade.toFixed(2)}%)`);
+      numericGrades.push(r.grade);
     });
-    if (!allSubjectsSelected) { showError('err-subjects'); valid = false; }
-    else hideError('err-subjects');
+
+    if (!allFilled) { showError('err-subjects'); valid = false; } else hideError('err-subjects');
+    if (numericGrades.length) gwa = numericGrades.reduce((s, v) => s + v, 0) / numericGrades.length;
   }
 
-  // Validate citizen
-  const citizen = getRadio('citizen');
-  if (!citizen) { showError('err-citizen'); valid = false; }
-  else hideError('err-citizen');
+  const citizen     = getRadio('citizen');
+  if (!citizen)     { showError('err-citizen'); valid = false; } else hideError('err-citizen');
 
-  // Validate DOST
   const dostApplied = getRadio('dost-applied');
-  if (!dostApplied) { showError('err-dost'); valid = false; }
-  else hideError('err-dost');
+  if (!dostApplied) { showError('err-dost'); valid = false; }   else hideError('err-dost');
 
   let dostQualified = null;
   if (dostApplied === 'yes') {
     dostQualified = getRadio('dost-qualified');
-    if (!dostQualified) { showError('err-dost-qualify'); valid = false; }
-    else hideError('err-dost-qualify');
+    if (!dostQualified) { showError('err-dost-qualify'); valid = false; } else hideError('err-dost-qualify');
   }
 
   if (!valid) return;
 
-  // ── Eligibility logic ────────────────────────────────────────────────────
   const reasons = [];
 
-  if (citizen === 'no') {
+  if (citizen === 'no')
     reasons.push('You must be a <strong>Filipino citizen</strong> to qualify.');
-  }
-  if (!isNaN(gwa) && gwa < 83) {
-    reasons.push(`Your GWA of <strong>${gwa.toFixed(2)}%</strong> is below the required <strong>83%</strong>.`);
-  }
-  if (failingSubjects.length > 0) {
-    reasons.push('You have <strong>failing or conditional marks</strong> in the following subject(s):<ul style="margin:0.3rem 0 0 1rem;font-size:0.85rem;">' + failingSubjects.map(s => `<li>${s}</li>`).join('') + '</ul>');
-  }
-  if (dostQualified === 'yes') {
-    reasons.push('You <strong>qualified</strong> for a DOST-SEI scholarship — JLSS applicants must not be existing DOST-SEI qualifiers.');
-  }
 
-  // ── Display result ───────────────────────────────────────────────────────
+  if (gwa !== null && gwa < 83)
+    reasons.push(`Your computed GWA of <strong>${gwa.toFixed(2)}%</strong> is below the required <strong>83.00%</strong>.`);
+
+  if (failingList.length)
+    reasons.push(
+      'You have <strong>failing or conditional marks</strong> in the following subject(s):' +
+      '<ul style="margin:0.3rem 0 0 1rem;font-size:0.85rem;">' +
+      failingList.map(s => `<li>${s}</li>`).join('') + '</ul>'
+    );
+
+  if (dostQualified === 'yes')
+    reasons.push('You <strong>qualified</strong> for a DOST-SEI scholarship — JLSS applicants must not already hold a DOST-SEI qualification.');
+
   const box   = document.getElementById('result-box');
   const title = document.getElementById('result-title');
   const list  = document.getElementById('result-reasons');
@@ -530,20 +599,20 @@ function checkEligibility() {
   box.className = 'result-box visible';
   list.innerHTML = '';
 
-  if (reasons.length === 0) {
+  if (!reasons.length) {
     box.classList.add('eligible');
     title.textContent = '✅ You appear to be eligible to apply for JLSS!';
-    list.innerHTML = '<li>Meets GWA requirement (≥ 83%)</li><li>No failing or conditional marks</li><li>Filipino citizen</li><li>No disqualifying DOST-SEI qualification</li>';
-    note.innerHTML = 'This result is based on the information you provided. Please verify your eligibility and complete requirements at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> before applying.';
+    list.innerHTML =
+      `<li>GWA of <strong>${gwa !== null ? gwa.toFixed(2)+'%' : 'N/A'}</strong> meets the 83% minimum</li>` +
+      '<li>No failing or conditional marks</li>' +
+      '<li>Filipino citizen</li>' +
+      '<li>No disqualifying DOST-SEI qualification</li>';
+    note.innerHTML = 'This result is based on the information you provided. Verify all requirements at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> before applying.';
   } else {
     box.classList.add('ineligible');
     title.textContent = '❌ You do not appear to be eligible for JLSS.';
-    reasons.forEach(r => {
-      const li = document.createElement('li');
-      li.innerHTML = r;
-      list.appendChild(li);
-    });
-    note.innerHTML = 'This checker is a guide only. If you believe there is an error, please verify directly at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a>.';
+    reasons.forEach(r => { const li = document.createElement('li'); li.innerHTML = r; list.appendChild(li); });
+    note.innerHTML = 'This checker is a guide only. Verify at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> if you believe this is an error.';
   }
 
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
