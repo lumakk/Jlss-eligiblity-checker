@@ -209,12 +209,10 @@ title: JLSS Eligibility Checker
 </style>
 
 <div class="checker-wrap">
-
   <div class="notice">
     <strong>ℹ️ Note:</strong> This checker assumes you are a <strong>Regular 2nd Year BSIT or BSCS student</strong> enrolled in a <strong>State University or College (SUC)</strong>. If you study at a <strong>Private HEI</strong> or <strong>Local University and College (LUC)</strong>, verify eligibility directly at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a>.
   </div>
 
-  <!-- ① Program -->
   <div class="form-card">
     <div class="form-card-header">① Your Program</div>
     <div class="form-card-body">
@@ -229,14 +227,13 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
-  <!-- ② Grades -->
   <div class="form-card">
     <div class="form-card-header">② Grades (1st Year to Current Semester)</div>
     <div class="form-card-body">
       <p style="margin:0 0 0.8rem;font-size:0.88rem;color:#444;">
         Enter your percentage grade (0–100) for each subject. Use the dropdown to mark a subject
         as <strong>INC</strong> or <strong>W</strong> instead of entering a number.
-        A grade below <strong>75%</strong>, or a mark of <em>INC</em> or <em>W</em>, is treated as a failing or conditional mark.
+        <br><em>NSTP and PATHFIT are excluded from GWA but must be passed ($\ge 75\%$).</em>
       </p>
       <div id="subject-list">
         <p style="color:#888;font-size:0.9rem;font-style:italic;">← Select your program above to load subjects.</p>
@@ -245,9 +242,8 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
-  <!-- Live GWA -->
   <div class="gwa-display" id="gwa-display">
-    <div class="gwa-label">Computed GWA:</div>
+    <div class="gwa-label">Computed GWA (Academic Only):</div>
     <div class="gwa-value" id="gwa-value">—</div>
     <div class="gwa-bar-wrap">
       <div class="gwa-bar-bg"><div class="gwa-bar-fill" id="gwa-bar"></div></div>
@@ -255,7 +251,6 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
-  <!-- ③ Citizenship -->
   <div class="form-card">
     <div class="form-card-header">③ Citizenship</div>
     <div class="form-card-body">
@@ -268,7 +263,6 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
-  <!-- ④ DOST-SEI -->
   <div class="form-card">
     <div class="form-card-header">④ DOST-SEI Application</div>
     <div class="form-card-body">
@@ -278,7 +272,7 @@ title: JLSS Eligibility Checker
         <label class="yn-opt"><input type="radio" name="dost-applied" value="no">  No</label>
       </div>
       <div class="error-msg" id="err-dost">Please answer this question.</div>
-
+      
       <div class="sub-question" id="dost-qualify-block">
         <label style="font-weight:600;font-size:0.9rem;">Did you <strong>qualify</strong> for that DOST-SEI scholarship?</label>
         <div class="yn-group" style="margin-top:0.4rem;">
@@ -297,7 +291,6 @@ title: JLSS Eligibility Checker
     <ul class="result-reasons" id="result-reasons"></ul>
     <div class="result-note" id="result-note"></div>
   </div>
-
 </div>
 
 <script>
@@ -462,11 +455,16 @@ function updateGWA() {
   if (!program) return;
 
   const rows = collectGrades(program);
-  const numeric = rows.filter(r => r.mark === 'normal' && r.grade !== null);
+  
+  // Filter: Must be normal mark AND must NOT be NSTP/PATHFIT
+  const academicOnly = rows.filter(r => {
+    const isAcademic = !r.code.startsWith('NSTP') && !r.code.startsWith('PATHFIT');
+    return r.mark === 'normal' && r.grade !== null && isAcademic;
+  });
 
-  if (numeric.length === 0) { paintGWA(null); return; }
+  if (academicOnly.length === 0) { paintGWA(null); return; }
 
-  const gwa = numeric.reduce((s, r) => s + r.grade, 0) / numeric.length;
+  const gwa = academicOnly.reduce((s, r) => s + r.grade, 0) / academicOnly.length;
   paintGWA(gwa);
 }
 
@@ -539,24 +537,31 @@ function checkEligibility() {
   const program = getRadio('program');
   if (!program) { showError('err-program'); valid = false; } else hideError('err-program');
 
-  let allFilled = true, failingList = [], gwa = null;
+  let allFilled = true, failingList = [], academicGrades = [];
 
   if (program) {
     const rows = collectGrades(program);
-    const numericGrades = [];
 
     rows.forEach(r => {
+      const isAcademic = !r.code.startsWith('NSTP') && !r.code.startsWith('PATHFIT');
+
+      // 1. Check for failing marks (Applies to ALL subjects)
       if (r.mark !== 'normal') {
         failingList.push(`${r.code} – ${r.name} (${r.mark.toUpperCase()})`);
         return;
       }
       if (r.grade === null) { allFilled = false; return; }
-      if (r.grade < PASSING) failingList.push(`${r.code} – ${r.name} (${r.grade.toFixed(2)}%)`);
-      numericGrades.push(r.grade);
+      if (r.grade < PASSING) {
+        failingList.push(`${r.code} – ${r.name} (${r.grade.toFixed(2)}%)`);
+      }
+
+      // 2. Push to academicGrades only if it's an academic subject
+      if (isAcademic) {
+        academicGrades.push(r.grade);
+      }
     });
 
     if (!allFilled) { showError('err-subjects'); valid = false; } else hideError('err-subjects');
-    if (numericGrades.length) gwa = numericGrades.reduce((s, v) => s + v, 0) / numericGrades.length;
   }
 
   const citizen     = getRadio('citizen');
@@ -573,17 +578,18 @@ function checkEligibility() {
 
   if (!valid) return;
 
+  const finalGwa = academicGrades.length ? (academicGrades.reduce((s, v) => s + v, 0) / academicGrades.length) : 0;
   const reasons = [];
 
   if (citizen === 'no')
     reasons.push('You must be a <strong>Filipino citizen</strong> to qualify.');
 
-  if (gwa !== null && gwa < 83)
-    reasons.push(`Your computed GWA of <strong>${gwa.toFixed(2)}%</strong> is below the required <strong>83.00%</strong>.`);
+  if (finalGwa < 83)
+    reasons.push(`Your computed GWA (excluding NSTP/PATHFIT) of <strong>${finalGwa.toFixed(2)}%</strong> is below the required <strong>83.00%</strong>.`);
 
   if (failingList.length)
     reasons.push(
-      'You have <strong>failing or conditional marks</strong> in the following subject(s):' +
+      'You have <strong>failing or conditional marks</strong> (including NSTP/PATHFIT):' +
       '<ul style="margin:0.3rem 0 0 1rem;font-size:0.85rem;">' +
       failingList.map(s => `<li>${s}</li>`).join('') + '</ul>'
     );
@@ -603,8 +609,8 @@ function checkEligibility() {
     box.classList.add('eligible');
     title.textContent = '✅ You appear to be eligible to apply for JLSS!';
     list.innerHTML =
-      `<li>GWA of <strong>${gwa !== null ? gwa.toFixed(2)+'%' : 'N/A'}</strong> meets the 83% minimum</li>` +
-      '<li>No failing or conditional marks</li>' +
+      `<li>GWA of <strong>${finalGwa.toFixed(2)}%</strong> (Academic only) meets the 83% minimum</li>` +
+      '<li>No failing or conditional marks in any subject</li>' +
       '<li>Filipino citizen</li>' +
       '<li>No disqualifying DOST-SEI qualification</li>';
     note.innerHTML = 'This result is based on the information you provided. Verify all requirements at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> before applying.';
