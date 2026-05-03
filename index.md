@@ -213,6 +213,7 @@ title: JLSS Eligibility Checker
     <strong>ℹ️ Note:</strong> This checker assumes you are a <strong>Regular 2nd Year BSIT or BSCS student</strong> enrolled in a <strong>State University or College (SUC)</strong>. If you study at a <strong>Private HEI</strong> or <strong>Local University and College (LUC)</strong>, verify eligibility directly at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a>.
   </div>
 
+  <!-- ① Program -->
   <div class="form-card">
     <div class="form-card-header">① Your Program</div>
     <div class="form-card-body">
@@ -227,13 +228,14 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
+  <!-- ② Grades -->
   <div class="form-card">
-    <div class="form-card-header">② Grades (1st Year to Current Semester)</div>
+    <div class="form-card-header">② Grades (Numeric Point System)</div>
     <div class="form-card-body">
       <p style="margin:0 0 0.8rem;font-size:0.88rem;color:#444;">
-        Enter your percentage grade (0–100) for each subject. Use the dropdown to mark a subject
-        as <strong>INC</strong> or <strong>W</strong> instead of entering a number.
-        <br><em>NSTP and PATHFIT are excluded from GWA but must be passed ($\ge 75\%$).</em>
+        Enter your numeric grades (e.g., <strong>1.00, 1.25, 2.50, 3.00</strong>). Use the dropdown for 
+        marks like <strong>INC, W (Withdrew),</strong> or <strong>D (Dropped)</strong>.
+        <br><em>NSTP/PATHFIT are excluded from GWA but must be passed ($\le 3.00$).</em>
       </p>
       <div id="subject-list">
         <p style="color:#888;font-size:0.9rem;font-style:italic;">← Select your program above to load subjects.</p>
@@ -242,8 +244,9 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
+  <!-- Live GWA -->
   <div class="gwa-display" id="gwa-display">
-    <div class="gwa-label">Computed GWA (Academic Only):</div>
+    <div class="gwa-label">Equivalent GWA (%):</div>
     <div class="gwa-value" id="gwa-value">—</div>
     <div class="gwa-bar-wrap">
       <div class="gwa-bar-bg"><div class="gwa-bar-fill" id="gwa-bar"></div></div>
@@ -251,6 +254,7 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
+  <!-- ③ Citizenship -->
   <div class="form-card">
     <div class="form-card-header">③ Citizenship</div>
     <div class="form-card-body">
@@ -263,6 +267,7 @@ title: JLSS Eligibility Checker
     </div>
   </div>
 
+  <!-- ④ DOST-SEI -->
   <div class="form-card">
     <div class="form-card-header">④ DOST-SEI Application</div>
     <div class="form-card-body">
@@ -379,9 +384,27 @@ const SUBJECTS = {
   ]
 };
 
-const PASSING = 75;
+// ── Conversion Logic ─────────────────────────────────────────────────────────
+function pointToPercentage(v) {
+  const grade = parseFloat(v);
+  if (isNaN(grade)) return null;
+  
+  // Mapping based on provided table midpoints
+  if (grade <= 1.00) return 98.5; // Mid of 97-100
+  if (grade <= 1.25) return 95.0; // Mid of 94-96
+  if (grade <= 1.50) return 92.0; // Mid of 91-93
+  if (grade <= 1.75) return 89.0; // Mid of 88-90
+  if (grade <= 2.00) return 86.0; // Mid of 85-87
+  if (grade <= 2.25) return 83.0; // Mid of 82-84
+  if (grade <= 2.50) return 80.0; // Mid of 79-81
+  if (grade <= 2.75) return 77.0; // Mid of 76-78
+  if (grade <= 3.00) return 75.0; 
+  if (grade <= 5.00) return 70.0; // Fail (Mid of 65-74)
+  return 0;
+}
 
-// ── Render subject list ───────────────────────────────────────────────────────
+const PASSING_POINT = 3.00;
+
 function renderSubjects(program) {
   const container = document.getElementById('subject-list');
   const gwaPanel  = document.getElementById('gwa-display');
@@ -403,13 +426,14 @@ function renderSubjects(program) {
             <span class="subject-code">${code}</span>${name}
           </div>
           <input type="number" class="grade-input" id="${id}"
-            min="0" max="100" step="0.01" placeholder="—"
+            min="1.0" max="5.0" step="0.01" placeholder="0.0"
             oninput="onGradeInput(this)"
-            data-code="${code}" data-name="${name.replace(/"/g, '&quot;')}">
+            data-code="${code}">
           <select class="mark-select" id="${id}-mark" onchange="onMarkChange(this,'${id}')">
             <option value="normal">Normal</option>
             <option value="inc">INC</option>
-            <option value="w">W</option>
+            <option value="w">W (Withdrew)</option>
+            <option value="d">D (Dropped)</option>
           </select>
         </div>`;
     });
@@ -421,7 +445,6 @@ function renderSubjects(program) {
   updateGWA();
 }
 
-// ── Grade input / mark handlers ───────────────────────────────────────────────
 function onGradeInput(input) {
   if (input.value !== '') document.getElementById(input.id + '-mark').value = 'normal';
   styleGrade(input);
@@ -446,46 +469,44 @@ function styleGrade(input) {
   input.classList.remove('ok', 'bad');
   const v = parseFloat(input.value);
   if (input.value === '' || isNaN(v)) return;
-  input.classList.add(v >= PASSING ? 'ok' : 'bad');
+  // In numeric points, lower is better. 3.0 or below is passing.
+  input.classList.add(v <= PASSING_POINT ? 'ok' : 'bad');
 }
 
-// ── Live GWA ──────────────────────────────────────────────────────────────────
 function updateGWA() {
   const program = getRadio('program');
   if (!program) return;
 
   const rows = collectGrades(program);
-  
-  // Filter: Must be normal mark AND must NOT be NSTP/PATHFIT
-  const academicOnly = rows.filter(r => {
-    const isAcademic = !r.code.startsWith('NSTP') && !r.code.startsWith('PATHFIT');
-    return r.mark === 'normal' && r.grade !== null && isAcademic;
-  });
+  const academicOnlyPercentages = rows
+    .filter(r => {
+      const isAcademic = !r.code.startsWith('NSTP') && !r.code.startsWith('PATHFIT');
+      return r.mark === 'normal' && r.grade !== null && isAcademic;
+    })
+    .map(r => pointToPercentage(r.grade));
 
-  if (academicOnly.length === 0) { paintGWA(null); return; }
+  if (academicOnlyPercentages.length === 0) { paintGWA(null); return; }
 
-  const gwa = academicOnly.reduce((s, r) => s + r.grade, 0) / academicOnly.length;
-  paintGWA(gwa);
+  const avgPercentage = academicOnlyPercentages.reduce((s, v) => s + v, 0) / academicOnlyPercentages.length;
+  paintGWA(avgPercentage);
 }
 
-function paintGWA(gwa) {
+function paintGWA(gwaPerc) {
   const valEl = document.getElementById('gwa-value');
   const barEl = document.getElementById('gwa-bar');
-  if (gwa === null) {
+  if (gwaPerc === null) {
     valEl.textContent = '—';
     valEl.className = 'gwa-value';
     barEl.style.width = '0%';
-    barEl.className = 'gwa-bar-fill';
     return;
   }
-  const ok = gwa >= 83;
-  valEl.textContent = gwa.toFixed(2) + '%';
+  const ok = gwaPerc >= 83;
+  valEl.textContent = gwaPerc.toFixed(2) + '%';
   valEl.className = 'gwa-value ' + (ok ? 'ok' : 'bad');
-  barEl.style.width = Math.min(gwa, 100) + '%';
+  barEl.style.width = Math.min(gwaPerc, 100) + '%';
   barEl.className = 'gwa-bar-fill ' + (ok ? 'ok' : 'bad');
 }
 
-// ── Collect grades ────────────────────────────────────────────────────────────
 function collectGrades(program) {
   const rows = [];
   SUBJECTS[program].forEach(sem => {
@@ -519,12 +540,6 @@ document.querySelectorAll('input[name="dost-applied"]').forEach(r =>
     r.addEventListener('change', () => hideError('err-' + name.replace('-','_').replace('dost_qualified','dost-qualify')))
   )
 );
-document.querySelectorAll('input[name="dost-qualified"]').forEach(r =>
-  r.addEventListener('change', () => hideError('err-dost-qualify'))
-);
-document.querySelectorAll('input[name="citizen"]').forEach(r =>
-  r.addEventListener('change', () => hideError('err-citizen'))
-);
 
 function showError(id) { document.getElementById(id).classList.add('visible'); }
 function hideError(id)  { const el = document.getElementById(id); if (el) el.classList.remove('visible'); }
@@ -537,7 +552,7 @@ function checkEligibility() {
   const program = getRadio('program');
   if (!program) { showError('err-program'); valid = false; } else hideError('err-program');
 
-  let allFilled = true, failingList = [], academicGrades = [];
+  let allFilled = true, failingList = [], academicPercentages = [];
 
   if (program) {
     const rows = collectGrades(program);
@@ -545,19 +560,19 @@ function checkEligibility() {
     rows.forEach(r => {
       const isAcademic = !r.code.startsWith('NSTP') && !r.code.startsWith('PATHFIT');
 
-      // 1. Check for failing marks (Applies to ALL subjects)
       if (r.mark !== 'normal') {
         failingList.push(`${r.code} – ${r.name} (${r.mark.toUpperCase()})`);
         return;
       }
       if (r.grade === null) { allFilled = false; return; }
-      if (r.grade < PASSING) {
-        failingList.push(`${r.code} – ${r.name} (${r.grade.toFixed(2)}%)`);
+      
+      // Check if numeric grade is failing (5.0 or above 3.0)
+      if (r.grade > PASSING_POINT) {
+        failingList.push(`${r.code} – ${r.name} (Point Grade: ${r.grade.toFixed(2)})`);
       }
 
-      // 2. Push to academicGrades only if it's an academic subject
       if (isAcademic) {
-        academicGrades.push(r.grade);
+        academicPercentages.push(pointToPercentage(r.grade));
       }
     });
 
@@ -578,29 +593,28 @@ function checkEligibility() {
 
   if (!valid) return;
 
-  const finalGwa = academicGrades.length ? (academicGrades.reduce((s, v) => s + v, 0) / academicGrades.length) : 0;
+  const finalGwaPerc = academicPercentages.length ? (academicPercentages.reduce((s, v) => s + v, 0) / academicPercentages.length) : 0;
   const reasons = [];
 
   if (citizen === 'no')
-    reasons.push('You must be a <strong>Filipino citizen</strong> to qualify.');
+    reasons.push('You must be a <strong>Filipino citizen</strong>.');
 
-  if (finalGwa < 83)
-    reasons.push(`Your computed GWA (excluding NSTP/PATHFIT) of <strong>${finalGwa.toFixed(2)}%</strong> is below the required <strong>83.00%</strong>.`);
+  if (finalGwaPerc < 83)
+    reasons.push(`Your equivalent GWA of <strong>${finalGwaPerc.toFixed(2)}%</strong> is below the required <strong>83.00%</strong>.`);
 
   if (failingList.length)
     reasons.push(
-      'You have <strong>failing or conditional marks</strong> (including NSTP/PATHFIT):' +
+      'You have <strong>failing or conditional marks</strong> (Grade > 3.0, W, D, or INC):' +
       '<ul style="margin:0.3rem 0 0 1rem;font-size:0.85rem;">' +
       failingList.map(s => `<li>${s}</li>`).join('') + '</ul>'
     );
 
   if (dostQualified === 'yes')
-    reasons.push('You <strong>qualified</strong> for a DOST-SEI scholarship — JLSS applicants must not already hold a DOST-SEI qualification.');
+    reasons.push('Applicants must not already hold a DOST-SEI qualification.');
 
   const box   = document.getElementById('result-box');
   const title = document.getElementById('result-title');
   const list  = document.getElementById('result-reasons');
-  const note  = document.getElementById('result-note');
 
   box.className = 'result-box visible';
   list.innerHTML = '';
@@ -609,18 +623,14 @@ function checkEligibility() {
     box.classList.add('eligible');
     title.textContent = '✅ You appear to be eligible to apply for JLSS!';
     list.innerHTML =
-      `<li>GWA of <strong>${finalGwa.toFixed(2)}%</strong> (Academic only) meets the 83% minimum</li>` +
-      '<li>No failing or conditional marks in any subject</li>' +
-      '<li>Filipino citizen</li>' +
-      '<li>No disqualifying DOST-SEI qualification</li>';
-    note.innerHTML = 'This result is based on the information you provided. Verify all requirements at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> before applying.';
+      `<li>Equivalent GWA: <strong>${finalGwaPerc.toFixed(2)}%</strong></li>` +
+      '<li>No failing marks or withdrawals</li>' +
+      '<li>Filipino citizen</li>';
   } else {
     box.classList.add('ineligible');
     title.textContent = '❌ You do not appear to be eligible for JLSS.';
     reasons.forEach(r => { const li = document.createElement('li'); li.innerHTML = r; list.appendChild(li); });
-    note.innerHTML = 'This checker is a guide only. Verify at <a href="https://jlss.science-scholarships.ph/" target="_blank">jlss.science-scholarships.ph</a> if you believe this is an error.';
   }
-
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 </script>
